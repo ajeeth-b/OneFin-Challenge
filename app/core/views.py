@@ -1,6 +1,6 @@
 from rest_framework import response, status, decorators
 from rest_framework.permissions import IsAuthenticated
-from . import credy
+from .utils import credy
 from rest_framework.views import APIView
 from . import models
 from . import serializer
