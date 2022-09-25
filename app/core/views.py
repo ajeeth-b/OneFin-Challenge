@@ -114,7 +114,6 @@ class CollectionsListAPI(APIView):
                     generes=movie_generes,
                 )
         except (TypeError, KeyError) as e:
-            print(e)
             collection.delete()
             return response.Response(
                 {"is_success": False, "message": "Bad Request!"},
@@ -200,6 +199,7 @@ class CollectionAPI(APIView):
                 flat=True,
             )
         )
+        created_movies = []
         try:
             for i in request.data.get("movies", []) or []:
 
@@ -209,14 +209,16 @@ class CollectionAPI(APIView):
                     i["genres"] or ""
                 )
 
-                models.Movies.create_movie_with_genere(
+                movie = models.Movies.create_movie_with_genere(
                     title=i["title"],
                     uuid=i["uuid"],
                     description=i["description"],
                     collection=collection,
                     generes=movie_generes,
                 )
+                created_movies += [movie.id]
         except (TypeError, KeyError) as e:
+            models.Movies.objects.exclude(id__in=created_movies).delete()
             return response.Response(
                 {"is_success": False, "message": "Bad Request!"},
                 status=status.HTTP_400_BAD_REQUEST,
