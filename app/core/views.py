@@ -35,7 +35,6 @@ def get_movies(request):
     return response.Response(data, status=status.HTTP_200_OK)
 
 
-
 class CollectionsListAPI(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -243,7 +242,7 @@ class CollectionAPI(APIView):
 
     def delete(self, request, collection_id):
         collection = models.Collection.objects.filter(id=collection_id).first()
-        if collection is None:
+        if collection is None or collection.is_active != True:
             return response.Response(
                 {
                     "is_success": False,
@@ -265,7 +264,7 @@ class CollectionAPI(APIView):
         collection.save()
         return response.Response(
             {
-                "is_success": False,
+                "is_success": True,
                 "message": "Collection Deleted Successfully!",
             },
             status=status.HTTP_200_OK,
