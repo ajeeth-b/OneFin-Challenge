@@ -6,6 +6,7 @@ from . import models
 from . import serializer
 from django.db import transaction
 from django.db.models import Count
+from utils.decorators import db_resourse_checker
 
 
 @decorators.api_view(["GET"])
@@ -132,19 +133,18 @@ class CollectionsListAPI(APIView):
 class CollectionAPI(APIView):
     permission_classes = [IsAuthenticated]
 
+    def _get_collection(self, collection_id):
+        collection = models.Collection.objects.get(id=collection_id)
+        if collection.is_active == False:
+            raise models.Collection.DoesNotExist
+        return collection
+
     def _has_access(self, request, collection):
         return request.user.id == collection.creator_id
 
+    @db_resourse_checker(models.Collection)
     def get(self, request, collection_id):
-        collection = models.Collection.objects.filter(id=collection_id).first()
-        if collection is None or collection.is_active == False:
-            return response.Response(
-                {
-                    "is_success": False,
-                    "message": "Collection Not Found!",
-                },
-                status=status.HTTP_404_NOT_FOUND,
-            )
+        collection = self._get_collection(collection_id)
 
         if self._has_access(request, collection) != True:
             return response.Response(
@@ -162,6 +162,7 @@ class CollectionAPI(APIView):
         )
 
     @transaction.atomic
+    @db_resourse_checker(models.Collection)
     def put(self, request, collection_id):
         if (
             request.data.get("title", None) is None
@@ -175,7 +176,7 @@ class CollectionAPI(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        collection = models.Collection.objects.filter(id=collection_id).first()
+        collection = self._get_collection(collection_id)
 
         if self._has_access(request, collection) != True:
             return response.Response(
@@ -189,15 +190,6 @@ class CollectionAPI(APIView):
         collection.title = request.data["title"]
         collection.description = request.data["description"]
         collection.save()
-
-        if collection is None:
-            return response.Response(
-                {
-                    "is_success": False,
-                    "message": "Collection Not Found!",
-                },
-                status=status.HTTP_404_NOT_FOUND,
-            )
 
         existing_movie_ids = list(
             models.Movies.objects.filter(
@@ -240,16 +232,10 @@ class CollectionAPI(APIView):
             status=status.HTTP_200_OK,
         )
 
+    @transaction.atomic
+    @db_resourse_checker(models.Collection)
     def delete(self, request, collection_id):
-        collection = models.Collection.objects.filter(id=collection_id).first()
-        if collection is None or collection.is_active != True:
-            return response.Response(
-                {
-                    "is_success": False,
-                    "message": "Collection Not Found!",
-                },
-                status=status.HTTP_404_NOT_FOUND,
-            )
+        collection = models.Collection.objects.get(id=collection_id)
 
         if self._has_access(request, collection) != True:
             return response.Response(
