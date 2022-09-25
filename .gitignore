@@ -4,3 +4,4 @@ app/app/.env
 migrations/
 __pycache__/
 temp_scripts/
+app/db.sqlite3
