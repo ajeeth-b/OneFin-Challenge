@@ -5,4 +5,4 @@ from django.db import models
 
 class RequestLog(models.Model):
     path = models.CharField(max_length=255)
-    is_latest = models.BooleanField(default=True)
+    include_for_count = models.BooleanField(default=True)

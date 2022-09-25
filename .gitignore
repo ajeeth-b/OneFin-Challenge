@@ -3,3 +3,4 @@ app/app/.env
 */migrations/*
 migrations/
 __pycache__/
+temp_scripts/
